@@ -5,6 +5,7 @@ import numpy as np
 from werkzeug.utils import secure_filename
 from skimage import morphology, io, color, exposure, filters
 
+# Inisialisasi aplikasi Flask dengan konfigurasi standar
 app = Flask(__name__)
 app.secret_key = 'paleografi_voc_key'
 app.config['UPLOAD_FOLDER'] = 'static/uploads/'
@@ -109,8 +110,11 @@ def process_image(image_path, operations):
 def index():
     return render_template('index.html')
 
-@app.route('/upload', methods=['POST'])
+@app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
+    if request.method == 'GET':
+        return render_template('index.html')
+        
     if 'file' not in request.files:
         flash('Tidak ada file yang dipilih')
         return redirect(request.url)

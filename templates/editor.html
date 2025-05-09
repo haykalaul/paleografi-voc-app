@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor Citra Paleografi - Arsip VOC</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .image-container {
+            max-height: 500px;
+            overflow: hidden;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .image-container img {
+            max-width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+        }
+        .operation-btn {
+            margin: 5px;
+        }
+        .active-operation {
+            background-color: #0d6efd;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <header class="my-3 text-center">
+            <h1>Editor Citra Paleografi Arsip VOC</h1>
+            <p class="text-muted">Pilih metode morfologi untuk meningkatkan kualitas citra</p>
+        </header>
+
+        <div class="row">
+            <!-- Panel Pengaturan -->
+            <div class="col-md-3">
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Pengaturan Pemrosesan</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="processingForm">
+                            <input type="hidden" id="filename" value="{{ filename }}">
+                            
+                            <h6 class="mb-3">Pra-pemrosesan</h6>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="denoise" name="denoise">
+                                <label class="form-check-label" for="denoise">
+                                    Reduksi Noise
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="contrast" name="contrast">
+                                <label class="form-check-label" for="contrast">
+                                    Perbaikan Kontras
+                                </label>
+                            </div>
+                            
+                            <hr>
+                            <h6 class="mb-3">Operasi Morfologi</h6>
+                            <div class="mb-3">
+                                <label for="kernelSize" class="form-label">Ukuran Kernel</label>
+                                <select class="form-select" id="kernelSize" name="kernel_size">
+                                    <option value="3">3x3</option>
+                                    <option value="5">5x5</option>
+                                    <option value="7">7x7</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="dilate" name="dilate">
+                                <label class="form-check-label" for="dilate">
+                                    Dilasi
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="erode" name="erode">
+                                <label class="form-check-label" for="erode">
+                                    Erosi
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="opening" name="opening">
+                                <label class="form-check-label" for="opening">
+                                    Opening
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="closing" name="closing">
+                                <label class="form-check-label" for="closing">
+                                    Closing
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="tophat" name="tophat">
+                                <label class="form-check-label" for="tophat">
+                                    Top Hat
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="blackhat" name="blackhat">
+                                <label class="form-check-label" for="blackhat">
+                                    Black Hat
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="gradient" name="gradient">
+                                <label class="form-check-label" for="gradient">
+                                    Gradient
+                                </label>
+                            </div>
+                            
+                            <hr>
+                            <h6 class="mb-3">Thresholding</h6>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="binarize" name="binarize">
+                                <label class="form-check-label" for="binarize">
+                                    Binarisasi Sederhana
+                                </label>
+                            </div>
+                            <div class="mb-3">
+                                <label for="thresholdValue" class="form-label">Nilai Threshold</label>
+                                <input type="range" class="form-range" id="thresholdValue" name="threshold" min="0" max="255" value="127">
+                                <div class="text-center" id="thresholdValueDisplay">127</div>
+                            </div>
+                            
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="adaptiveThreshold" name="adaptive_threshold">
+                                <label class="form-check-label" for="adaptiveThreshold">
+                                    Threshold Adaptif
+                                </label>
+                            </div>
+                            <div class="mb-3">
+                                <label for="blockSize" class="form-label">Ukuran Block</label>
+                                <select class="form-select" id="blockSize" name="block_size">
+                                    <option value="3">3x3</option>
+                                    <option value="5">5x5</option>
+                                    <option value="7">7x7</option>
+                                    <option value="9">9x9</option>
+                                    <option value="11" selected>11x11</option>
+                                    <option value="15">15x15</option>
+                                </select>
+                            </div>
+                            
+                            <hr>
+                            <h6 class="mb-3">Skeletonisasi</h6>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="skeletonize" name="skeletonize">
+                                <label class="form-check-label" for="skeletonize">
+                                    Skeletonisasi
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="invertBeforeSkeletonize" name="invert_before_skeletonize">
+                                <label class="form-check-label" for="invertBeforeSkeletonize">
+                                    Inversi Sebelum Skeletonisasi
+                                </label>
+                            </div>
+                            
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="button" id="processBtn" class="btn btn-primary">
+                                    <i class="fas fa-cogs"></i> Proses Citra
+                                </button>
+                                <button type="button" id="resetBtn" class="btn btn-secondary">
+                                    <i class="fas fa-undo"></i> Reset Pengaturan
+                                </button>
+                                <a href="/" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left"></i> Kembali
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Panel Gambar -->
+            <div class="col-md-9">
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Visualisasi</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info" id="processingStatus" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i> Sedang memproses citra...
+                        </div>
+                        
+                        <div class="alert alert-danger" id="errorMessage" style="display: none;">
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5 class="text-center mb-3">Citra Asli</h5>
+                                <div class="image-container">
+                                    <img src="{{ original_image }}" alt="Citra Asli" id="originalImage">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="text-center mb-3">Hasil Pemrosesan</h5>
+                                <div class="image-container">
+                                    <img src="{{ original_image }}" alt="Hasil Pemrosesan" id="processedImage">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <div id="downloadContainer" style="display: none;">
+                                <a id="downloadBtn" class="btn btn-success" download>
+                                    <i class="fas fa-download"></i> Unduh Hasil
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Panel Info Morfologi -->
+                <div class="card shadow">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Informasi Operasi Morfologi</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Metode morfologi adalah teknik pemrosesan citra yang didasarkan pada bentuk. Berikut penjelasan singkat operasi yang tersedia:</p>
+                        
+                        <ul>
+                            <li><strong>Dilasi:</strong> Memperluas area terang, menebalkan tulisan dan mengisi celah kecil</li>
+                            <li><strong>Erosi:</strong> Mempersempit area terang, mengikis tulisan dan menghilangkan detail kecil</li>
+                            <li><strong>Opening:</strong> Erosi diikuti dengan dilasi, baik untuk menghilangkan noise kecil</li>
+                            <li><strong>Closing:</strong> Dilasi diikuti dengan erosi, baik untuk mengisi lubang kecil</li>
+                            <li><strong>Top Hat:</strong> Menyoroti detail terang kecil dalam lingkungan gelap</li>
+                            <li><strong>Black Hat:</strong> Menyoroti detail gelap kecil dalam lingkungan terang</li>
+                            <li><strong>Gradient:</strong> Menyoroti tepi/batas pada citra</li>
+                            <li><strong>Skeletonisasi:</strong> Menipiskan objek hingga menjadi garis dengan lebar 1 piksel</li>
+                        </ul>
+                        
+                        <p>Tips: Untuk arsip VOC, kombinasi perbaikan kontras, dilasi ringan, dan binarisasi adaptif sering memberikan hasil yang baik.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center py-3 mt-5 bg-light">
+        <p>© 2025 - Sistem Peningkatan Kualitas Citra Paleografi Arsip VOC</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tampilkan nilai threshold
+            const thresholdSlider = document.getElementById('thresholdValue');
+            const thresholdDisplay = document.getElementById('thresholdValueDisplay');
+            
+            thresholdSlider.addEventListener('input', function() {
+                thresholdDisplay.textContent = this.value;
+            });
+            
+            // Proses citra
+            const processBtn = document.getElementById('processBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const processingStatus = document.getElementById('processingStatus');
+            const errorMessage = document.getElementById('errorMessage');
+            const downloadContainer = document.getElementById('downloadContainer');
+            const downloadBtn = document.getElementById('downloadBtn');
+            
+            processBtn.addEventListener('click', function() {
+                // Tampilkan status pemrosesan
+                processingStatus.style.display = 'block';
+                errorMessage.style.display = 'none';
+                
+                // Kumpulkan semua checkbox yang dicentang
+                const operations = {};
+                const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        operations[checkbox.name] = true;
+                    }
+                });
+                
+                // Tambahkan nilai-nilai lain
+                operations['kernel_size'] = document.getElementById('kernelSize').value;
+                operations['threshold'] = document.getElementById('thresholdValue').value;
+                operations['block_size'] = document.getElementById('blockSize').value;
+                
+                // Kirim permintaan ke server
+                fetch('/process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        filename: document.getElementById('filename').value,
+                        operations: operations
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    processingStatus.style.display = 'none';
+                    
+                    if (data.error) {
+                        errorMessage.textContent = 'Error: ' + data.error;
+                        errorMessage.style.display = 'block';
+                        return;
+                    }
+                    
+                    // Tampilkan gambar hasil
+                    const processedImage = document.getElementById('processedImage');
+                    processedImage.src = data.processed_image + '?t=' + new Date().getTime(); // Hindari cache
+                    
+                    // Aktifkan tombol download
+                    downloadContainer.style.display = 'block';
+                    downloadBtn.href = data.processed_image;
+                })
+                .catch(error => {
+                    processingStatus.style.display = 'none';
+                    errorMessage.textContent = 'Error: ' + error.message;
+                    errorMessage.style.display = 'block';
+                });
+            });
+            
+            // Reset form
+            resetBtn.addEventListener('click', function() {
+                document.getElementById('processingForm').reset();
+                thresholdDisplay.textContent = '127';
+            });
+        });
+    </script>
+</body>
+</html>
