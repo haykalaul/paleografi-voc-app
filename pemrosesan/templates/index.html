@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peningkatan Kualitas Citra Paleografi Arsip VOC</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header class="my-5 text-center">
+            <h1 class="display-4">Sistem Peningkatan Kualitas Citra Paleografi</h1>
+            <h2 class="text-muted">Arsip VOC</h2>
+        </header>
+
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">Unggah Citra Paleografi</h3>
+                    </div>
+                    <div class="card-body">
+                        {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                                {% for message in messages %}
+                                    <div class="alert alert-warning">{{ message }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+
+                        <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data" class="mb-3">
+                            <div class="mb-3">
+                                <label for="file" class="form-label">Pilih file citra paleografi arsip VOC</label>
+                                <input type="file" class="form-control" id="file" name="file" accept=".jpg,.jpeg,.png,.tif,.tiff">
+                                <div class="form-text">Format yang didukung: JPG, PNG, TIFF</div>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">Unggah</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="mt-5">
+                    <div class="card shadow">
+                        <div class="card-header bg-info text-white">
+                            <h3 class="mb-0">Tentang Aplikasi</h3>
+                        </div>
+                        <div class="card-body">
+                            <p>Aplikasi ini dikembangkan untuk meningkatkan kualitas citra paleografi dokumen arsip VOC menggunakan metode morfologi.</p>
+                            <h5>Fitur utama:</h5>
+                            <ul>
+                                <li>Operasi morfologi (dilasi, erosi, opening, closing)</li>
+                                <li>Binarisasi adaptif untuk perbaikan kontras</li>
+                                <li>Skeletonisasi untuk memperjelas struktur tulisan</li>
+                                <li>Denoising untuk menghilangkan noise</li>
+                                <li>Perbaikan kualitas citra arsip bersejarah</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center py-4 mt-5 bg-light">
+        <p>© 2025 - Sistem Peningkatan Kualitas Citra Paleografi Arsip VOC</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
