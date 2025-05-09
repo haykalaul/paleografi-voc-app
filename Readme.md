@@ -23,7 +23,7 @@ Aplikasi web berbasis Python untuk meningkatkan kualitas citra paleografi arsip 
 
 1. Clone repository ini
    ```bash
-   git clone [URL_REPOSITORY]
+   git clone https://github.com/haykal-proge/paleografi-voc-app.git
    cd paleografi-voc-app
    ```
 
