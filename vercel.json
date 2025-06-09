@@ -1,11 +1,22 @@
 {
   "version": 2,
   "builds": [
-    { "src": "Paleografi-voc-app/app.py", "use": "@vercel/python" },
-    { "src": "build_files.sh", "use": "@vercel/static-build", "config": { "distDir": "staticfiles_build" } }
+    {
+      "src": "paleografi_voc_app/wsgi.py",
+      "use": "@vercel/python",
+      "config": {
+        "buildCommand": "bash build_files.sh"
+      }
+    }
   ],
   "routes": [
-    { "src": "/static/(.*)", "dest": "/static/$1" },
-    { "src": "/(.*)", "dest": "Paleografi-voc-app/app.py" }
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "paleografi_voc_app/wsgi.py"
+    }
   ]
 }
