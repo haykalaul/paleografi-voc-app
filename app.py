@@ -20,6 +20,7 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
+
 def process_image(image_path, operations):
     """Memproses citra dengan berbagai operasi morfologi"""
     # Baca gambar
@@ -35,22 +36,20 @@ def process_image(image_path, operations):
         gray = img
     
     # Proses gambar berdasarkan operasi yang dipilih
-    processed = gray.copy()
+    processed = img.copy()
     
     # Pra-pemrosesan dasar
     if 'denoise' in operations:
         processed = cv2.fastNlMeansDenoising(processed, None, 10, 7, 21)
     
     if 'contrast' in operations:
-        processed = exposure.equalize_hist(processed)
-        processed = (processed * 255).astype(np.uint8)
-    
+        processed = exposure.equalize_hist(processed)    
     # Operasi morfologi
-    kernel_size = int(operations.get('kernel_size', 3))
+    kernel_size = int(operations.get('kernel_size', 7))
     kernel = np.ones((kernel_size, kernel_size), np.uint8)
     
     if 'dilate' in operations:
-        processed = cv2.dilate(processed, kernel, iterations=1)
+        processed = cv2.dilate(processed, kernel, iterations=100)
     
     if 'erode' in operations:
         processed = cv2.erode(processed, kernel, iterations=1)
