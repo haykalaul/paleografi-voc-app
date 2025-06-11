@@ -2,11 +2,9 @@
   "version": 2,
   "builds": [
     {
-      "src": "app.py",
+      "src": "paleografi_voc_app/app.py",
       "use": "@vercel/python",
       "config": {
-        "maxLambdaSize": "25mb",
-        "pythonVersion": "3.11",
         "buildCommand": "bash build_files.sh"
       }
     }
@@ -18,7 +16,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "app.py"
+      "dest": "paleografi_voc_app/app.py"
     }
   ]
 }
