@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "paleografi_voc_app/app.py",
+      "src": "app.py",
       "use": "@vercel/python",
       "config": {
         "buildCommand": "bash build_files.sh"
@@ -16,7 +16,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "paleografi_voc_app/app.py"
+      "dest": "app.py"
     }
   ]
 }
