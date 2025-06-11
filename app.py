@@ -1,3 +1,5 @@
+# app.py yang sudah dimodifikasi
+
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
 import os
 import cv2
@@ -5,115 +7,50 @@ import numpy as np
 from werkzeug.utils import secure_filename
 from skimage import morphology, io, color, exposure, filters
 
-# Inisialisasi aplikasi Flask dengan konfigurasi standar
+# Inisialisasi aplikasi Flask
 app = Flask(__name__)
 app.secret_key = 'paleografi_voc_key'
-app.config['UPLOAD_FOLDER'] = 'static/uploads/'
-app.config['PROCESSED_FOLDER'] = 'static/processed/'
+
+# --- PERUBAHAN UTAMA: Gunakan direktori /tmp untuk file dinamis ---
+UPLOAD_FOLDER = '/tmp/uploads'
+PROCESSED_FOLDER = '/tmp/processed'
+# -----------------------------------------------------------------
+
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'tif', 'tiff'}
 
-# Membuat direktori jika belum ada
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-os.makedirs(app.config['PROCESSED_FOLDER'], exist_ok=True)
+# Membuat direktori di /tmp jika belum ada
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(PROCESSED_FOLDER, exist_ok=True)
+
+# ... (Fungsi process_image Anda TIDAK PERLU DIUBAH, hanya perlu pastikan path-nya benar) ...
+# Salin fungsi allowed_file dan process_image Anda di sini tanpa perubahan
 
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
-
 def process_image(image_path, operations):
-    """Memproses citra dengan berbagai operasi morfologi"""
-    # Baca gambar
+    # Definisi fungsi process_image Anda di sini
+    # Pastikan output path menggunakan PROCESSED_FOLDER yang baru
     img = cv2.imread(image_path)
     
-    # Simpan gambar asli untuk referensi
-    original_img = img.copy()
-    
-    # Konversi ke grayscale jika belum
-    if len(img.shape) > 2:
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    else:
-        gray = img
-    
-    # Proses gambar berdasarkan operasi yang dipilih
-    processed = img.copy()
-    
-    # Pra-pemrosesan dasar
-    if 'denoise' in operations:
-        processed = cv2.fastNlMeansDenoising(processed, None, 10, 7, 21)
-    
-    if 'contrast' in operations:
-        processed = exposure.equalize_hist(processed)    
-    # Operasi morfologi
-    kernel_size = int(operations.get('kernel_size', 7))
-    kernel = np.ones((kernel_size, kernel_size), np.uint8)
-    
-    if 'dilate' in operations:
-        processed = cv2.dilate(processed, kernel, iterations=100)
-    
-    if 'erode' in operations:
-        processed = cv2.erode(processed, kernel, iterations=1)
-    
-    if 'opening' in operations:
-        processed = cv2.morphologyEx(processed, cv2.MORPH_OPEN, kernel)
-    
-    if 'closing' in operations:
-        processed = cv2.morphologyEx(processed, cv2.MORPH_CLOSE, kernel)
-    
-    if 'tophat' in operations:
-        processed = cv2.morphologyEx(processed, cv2.MORPH_TOPHAT, kernel)
-    
-    if 'blackhat' in operations:
-        processed = cv2.morphologyEx(processed, cv2.MORPH_BLACKHAT, kernel)
-    
-    if 'gradient' in operations:
-        processed = cv2.morphologyEx(processed, cv2.MORPH_GRADIENT, kernel)
-    
-    # Binarisasi (thresholding)
-    if 'binarize' in operations:
-        threshold_value = int(operations.get('threshold', 127))
-        _, processed = cv2.threshold(processed, threshold_value, 255, cv2.THRESH_BINARY)
-    
-    if 'adaptive_threshold' in operations:
-        block_size = int(operations.get('block_size', 11))
-        processed = cv2.adaptiveThreshold(processed, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                         cv2.THRESH_BINARY, block_size, 2)
-    
-    # Skeletonisasi untuk memperjelas struktur tulisan
-    if 'skeletonize' in operations:
-        # Pastikan gambar biner
-        if 'binarize' not in operations and 'adaptive_threshold' not in operations:
-            _, temp = cv2.threshold(processed, 127, 255, cv2.THRESH_BINARY)
-            processed = temp
-        
-        # Inversi warna jika tulisan berwarna hitam
-        if operations.get('invert_before_skeletonize', False):
-            processed = 255 - processed
-            
-        # Normalisasi untuk skeletonisasi
-        processed_binary = processed > 0
-        skeleton = morphology.skeletonize(processed_binary)
-        processed = (skeleton * 255).astype(np.uint8)
-        
-        if operations.get('invert_before_skeletonize', False):
-            processed = 255 - processed
-    
-    # Simpan hasil
-    output_path = os.path.join(app.config['PROCESSED_FOLDER'], 
-                              f"processed_{os.path.basename(image_path)}")
-    cv2.imwrite(output_path, processed)
+    # ... (logika pemrosesan Anda) ...
+
+    # Simpan hasil ke direktori /tmp/processed
+    output_filename = f"processed_{os.path.basename(image_path)}"
+    output_path = os.path.join(PROCESSED_FOLDER, output_filename)
+    cv2.imwrite(output_path, processed_image) # ganti 'processed_image' dengan variabel hasil Anda
     
     return output_path
+
+# ...
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/upload', methods=['GET', 'POST'])
+@app.route('/upload', methods=['POST'])
 def upload_file():
-    if request.method == 'GET':
-        return render_template('index.html')
-        
     if 'file' not in request.files:
         flash('Tidak ada file yang dipilih')
         return redirect(request.url)
@@ -126,7 +63,8 @@ def upload_file():
     
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        # --- PERUBAHAN: Simpan file ke /tmp/uploads ---
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
         file.save(filepath)
         
         return redirect(url_for('editor', filename=filename))
@@ -136,9 +74,10 @@ def upload_file():
 
 @app.route('/editor/<filename>')
 def editor(filename):
+    # --- PERUBAHAN: URL gambar sekarang menunjuk ke route baru ---
     return render_template('editor.html', 
-                          original_image=url_for('static', filename=f'uploads/{filename}'),
-                          filename=filename)
+                           original_image=url_for('serve_upload', filename=filename),
+                           filename=filename)
 
 @app.route('/process', methods=['POST'])
 def process():
@@ -149,14 +88,16 @@ def process():
     if not filename:
         return jsonify({'error': 'Filename tidak ditemukan'}), 400
     
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
     
     if not os.path.exists(filepath):
-        return jsonify({'error': 'File tidak ditemukan'}), 404
+        return jsonify({'error': 'File tidak ditemukan di /tmp'}), 404
     
     try:
         processed_path = process_image(filepath, operations)
-        processed_url = url_for('static', filename=f'processed/processed_{filename}')
+        processed_filename = os.path.basename(processed_path)
+        # --- PERUBAHAN: URL menunjuk ke route baru untuk file yang diproses ---
+        processed_url = url_for('serve_processed', filename=processed_filename)
         
         return jsonify({
             'success': True,
@@ -165,11 +106,20 @@ def process():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# --- ROUTE BARU: Untuk menyajikan file dari direktori /tmp ---
+@app.route('/uploads/<filename>')
+def serve_upload(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
+
+@app.route('/processed/<filename>')
+def serve_processed(filename):
+    return send_from_directory(PROCESSED_FOLDER, filename)
+# -------------------------------------------------------------
+
 @app.route('/download/<filename>')
 def download(filename):
-    # Implementasi download file hasil pemrosesan
     processed_file = f"processed_{filename}"
-    return send_from_directory(app.config['PROCESSED_FOLDER'], processed_file, as_attachment=True)
+    return send_from_directory(PROCESSED_FOLDER, processed_file, as_attachment=True)
 
 if __name__ == '__main__':
     app.run(debug=True)
