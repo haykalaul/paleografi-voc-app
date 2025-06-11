@@ -1,7 +1,12 @@
 #!/bin/bash
 set -e
 
-echo "Installing Python dependencies..."
+echo "Build started..."
+
+echo "Installing dependencies..."
 pip install -r requirements.txt
 
-echo "Build complete."
+echo "Collecting static files..."
+python manage.py collectstatic --noinput --clear
+
+echo "Build finished."
