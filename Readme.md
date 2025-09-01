@@ -50,6 +50,58 @@ Aplikasi web berbasis Python untuk meningkatkan kualitas citra paleografi arsip 
 
 5. Buka browser dan akses `http://localhost:5000`
 
+## Deploy ke PythonAnywhere
+
+Jika ingin menerapkan aplikasi ini ke PythonAnywhere, ikuti langkah singkat berikut:
+
+1. Siapkan repository publik atau private (mis. GitHub). Di mesin lokal:
+   ```bash
+   git add .
+   git commit -m "Add project for deployment"
+   git push origin main
+   ```
+
+2. Buat akun di https://www.pythonanywhere.com/ dan masuk.
+
+3. Buat virtualenv di PythonAnywhere (contoh untuk Python 3.10):
+   ```bash
+   mkvirtualenv --python=python3.10 my-venv
+   ```
+
+4. Clone project di account PythonAnywhere (atau gunakan "Source code" -> "Clone a repo"):
+   ```bash
+   git clone https://github.com/username/paleografi-voc-app.git
+   cd paleografi-voc-app
+   workon my-venv
+   pip install -r requirements.txt
+   ```
+
+5. Atur Web app di dashboard PythonAnywhere:
+   - Klik "Web" -> "Add a new web app" -> pilih Manual configuration -> pilih versi Python yang sama dengan virtualenv.
+   - Pada bagian "Virtualenv", isi path ke virtualenv Anda (mis. /home/username/.virtualenvs/my-venv).
+   - Pada bagian "Source code", atur path ke folder hasil clone (mis. /home/username/paleografi-voc-app).
+
+6. Edit file WSGI (link "WSGI configuration file" di dashboard) agar memuat aplikasi Flask dari `app.py`. Contoh minimal yang dapat Anda tambahkan/ubah:
+   ```python
+   import sys
+   path = '/home/yourusername/paleografi-voc-app'
+   if path not in sys.path:
+       sys.path.insert(0, path)
+
+   from app import app as application
+   ```
+
+7. Static files dan folder upload:
+   - Di dashboard Web -> Static files, tambahkan mapping untuk `/static/` ke folder `/home/yourusername/paleografi-voc-app/static/`.
+   - Jika aplikasi menulis ke `static/uploads/` atau `static/processed/`, pastikan folder tersebut memiliki permission tulis untuk user PythonAnywhere.
+
+8. Reload web app dari dashboard. Jika ada error, lihat "Error log" dan "Server log" untuk detail.
+
+Catatan penting:
+- Pastikan `app.py` mengekspor objek Flask bernama `app` (contoh: `app = Flask(__name__)`). WSGI di atas mengimpor `app` dan merename menjadi `application`.
+- Set `DEBUG = False` atau gunakan environment variable pada produksi.
+- Jika menggunakan file konfigurasi (mis. `settings.py`), pastikan path dan konfigurasi upload/static sesuai environment PythonAnywhere.
+
 ## Struktur Direktori
 
 ```
